@@ -1,7 +1,7 @@
 RaspberryPi-NeoPixel-WS2812
 ===========================
 
-Library for driving WS2812 pixels (also known as "NeoPixels" when sold by Adafruit) from a Raspberry Pi.
+Library for driving WS2812 pixels (also known as "NeoPixels" when sold by Adafruit) from a Raspberry Pi. Unlike other solutions, this DOES NOT require an Arduino or other external controller. The Raspberry Pi has a DMA controller that is perfectly capable of doing the job. All you need is a resistor and a capacitor, and you're done!
 
 Wishlist:
 * Modify DMA code so it can use more than one 4K page, enabling >450 pixels (some people have thousands!)
