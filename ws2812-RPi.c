@@ -114,6 +114,7 @@
 #include <math.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/file.h>	// Used for single instance check
 
 
 
@@ -1392,6 +1393,17 @@ void effectsDemo() {
 
 
 int main(int argc, char **argv) { 
+	// Check "Single Instance"
+	int pid_file = open("/var/run/whatever.pid", O_CREAT | O_RDWR, 0666);
+	int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+	if(rc) {
+	    if(EWOULDBLOCK == errno)
+	    {
+	        // another instance is running
+	        printf("Instance already running\n");
+	        exit(EXIT_FAILURE);
+	    }
+	}
 
 	// Catch all signals possible - it's vital we kill the DMA engine on process exit!
 	int i;
