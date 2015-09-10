@@ -114,6 +114,7 @@
 #include <math.h>
 #include <time.h>
 
+#include <getopt.h>
 #include "ws2812-RPi.h"
 
 // =================================================================================================
@@ -125,10 +126,14 @@
 //	        \/     \/        \/ 
 // =================================================================================================
 
+float cfg_brightness=DEFAULT_BRIGHTNESS;
+
 void effectsDemo() {
 
 	int i, j, ptr;
 	float k;
+
+
 
 	// Default effects from the Arduino lib
 	colorWipe(Color(255, 0, 0), 50); // Red
@@ -167,7 +172,7 @@ void effectsDemo() {
 	uint8_t lastBlue = 0;
 	uint8_t red, green, blue;
 	Color_t curPixel;
-	setBrightness(DEFAULT_BRIGHTNESS);
+	setBrightness(cfg_brightness);
 	for(j=1; j<16; j++) {
 		ptr = 0;
 		if(j % 3) {
@@ -202,7 +207,48 @@ void effectsDemo() {
 }
 
 
-int main(int argc, char **argv) { 
+int main(int argc, char **argv)
+{ 
+	int set=false;
+
+	while (1) {
+		int option_index = 0;
+		static struct option long_options[] = {
+			{"help", 0, NULL, 'h'},
+			{"debug", 0, NULL, 'd'},
+			{"version", 0, NULL, 'v'},
+			{"brightness", 1, NULL, 'b'},
+			{"set", 0, NULL, 's'}
+		};
+		int c = getopt_long(argc, argv, "hduvs:p:x", long_options, &option_index);
+		if (c == -1)
+			break;
+		switch (c) {
+			case 'h':
+				printf(
+					" --help\n"
+					" --debug\n"
+					" --version\n"
+					" --brightness\n"
+					" --set RRGGBB RRGGBB\n"
+					"     disables demo mode, sets X leds\n"
+					);
+				exit(0);
+			case 'd':
+				//FIXME
+				break;
+			case 'v':
+				printf("%s 0.123\n",argv[0]);
+				exit(0);
+			case 'b':
+				cfg_brightness=atof(optarg);
+				break;
+			case 's':
+				set=true;
+				break;
+		}
+	}
+
 	// Check "Single Instance"
 	int pid_file = open("/var/run/whatever.pid", O_CREAT | O_RDWR, 0666);
 	int rc = flock(pid_file, LOCK_EX | LOCK_NB);
@@ -231,15 +277,28 @@ int main(int argc, char **argv) {
 	numLEDs = 24;
 
 	// How bright? (Recommend 0.2 for direct viewing @ 3.3V)
-	setBrightness(DEFAULT_BRIGHTNESS);
+	setBrightness(cfg_brightness);
 
 	// Init PWM generator and clear LED buffer
 	initHardware();
 	clearLEDBuffer();
 
-	// Show some effects
-	while(true) {
-		effectsDemo();
+	if(set) {
+		for(i=optind; i < argc; i++) {
+			const char *elem=argv[i];
+			const char *endp=NULL;
+			long l=strtol(elem, &endp, 16);
+			if(endp && endp[0] == '\0') {
+				// printf("argv[%d]=%s\n", i, elem);
+				setPixelColor(i-optind, (l >> 16) & 0xff, (l >> 8) & 0xff , l & 0xff);
+			}
+		}
+		show();
+	} else {
+		// Show some effects
+		while(true) {
+			effectsDemo();
+		}
 	}
 
 	// Exit cleanly, freeing memory and stopping the DMA & PWM engines
