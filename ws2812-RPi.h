@@ -17,6 +17,7 @@
 // License: GPL
 //
 
+/*
 // =================================================================================================
 //	.___              .__            .___             
 //	|   | ____   ____ |  |  __ __  __| _/____   ______
@@ -25,6 +26,7 @@
 //	|___|___|  /\___  >____/____/\____ |\___  >____  >
 //	         \/     \/                \/    \/     \/ 
 // =================================================================================================
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -47,6 +49,7 @@
 
 
 
+/*
 // =================================================================================================
 //	________          _____.__                         ____    ____   ____                    
 //	\______ \   _____/ ____\__| ____   ____   ______  /  _ \   \   \ /   /____ _______  ______
@@ -55,6 +58,7 @@
 //	/_______  /\___  >__|  |__|___|  /\___  >____  > \_____\ \    \___/  (____  /__|  /____  >
 //	        \/     \/              \/     \/     \/         \/                \/           \/ 
 // =================================================================================================
+*/
 
 // Base addresses for GPIO, PWM, PWM clock, and DMA controllers (physical, not bus!)
 // These will be "memory mapped" into virtual RAM so that they can be written and read directly.
@@ -281,7 +285,6 @@ struct control_data_s {
 	uint32_t sample[NUM_DATA_WORDS];
 };
 
-static struct control_data_s *ctl;
 
 #define PAGE_SIZE	4096					// Size of a RAM page to be allocated
 #define PAGE_SHIFT	12						// This is used for address translation
@@ -315,15 +318,16 @@ unsigned int reverseWord(unsigned int word);
 
 void terminate(int dummy);
 
-static void fatal(char *fmt, ...);
+void fatal(char *fmt, ...);
 
 // Memory management
 // --------------------------------------------------------------------------------------------------
-static unsigned int mem_virt_to_phys(void *virt);
-static unsigned int mem_phys_to_virt(uint32_t phys);
-static void * map_peripheral(uint32_t base, uint32_t len);
+unsigned int mem_virt_to_phys(void *virt);
+unsigned int mem_phys_to_virt(uint32_t phys);
+void * map_peripheral(uint32_t base, uint32_t len);
 
 
+/*
 // =================================================================================================
 //	.____     ___________________      _________ __          _____  _____ 
 //	|    |    \_   _____/\______ \    /   _____//  |_ __ ___/ ____\/ ____\
@@ -332,6 +336,7 @@ static void * map_peripheral(uint32_t base, uint32_t len);
 //	|_______ \/_______  //_______  / /_______  /|__| |____/ |__|   |__|   
 //	        \/        \/         \/          \/                           
 // =================================================================================================
+*/
 
 // Brightness - I recommend 0.2 for direct viewing at 3.3v.
 #define DEFAULT_BRIGHTNESS 1.0
@@ -394,6 +399,7 @@ void setPWMBit(unsigned int bitPos, unsigned char bit);
 unsigned char getPWMBit(unsigned int bitPos); 
 
 
+/*
 // =================================================================================================
 //	________        ___.
 //	\______ \   ____\_ |__  __ __  ____  
@@ -402,6 +408,7 @@ unsigned char getPWMBit(unsigned int bitPos);
 //	 /_______  /\___  >___  /____/\___  / 
 //	         \/     \/    \/     /_____/  
 // =================================================================================================
+*/
 
 // Dump contents of LED buffer
 void dumpLEDBuffer();
@@ -437,6 +444,7 @@ void dumpTransferInformation(unsigned int TI);
 void dumpDMA();
 
 
+/*
 // =================================================================================================
 //	.___       .__  __      ___ ___                  .___                              
 //	|   | ____ |__|/  |_   /   |   \_____ _______  __| _/_  _  _______ _______   ____  
@@ -445,6 +453,7 @@ void dumpDMA();
 //	|___|___|  /__||__|    \___|_  /(____  /__|  \____ |  \/\_/  (____  /__|    \___  >
 //	         \/                  \/      \/           \/              \/            \/ 
 // =================================================================================================
+*/
 
 void initHardware();
 
@@ -453,6 +462,7 @@ void startTransfer();
 
 
 
+/*
 // =================================================================================================
 //	  ____ ___            .___       __           .____     ___________________          
 //	 |    |   \______   __| _/____ _/  |_  ____   |    |    \_   _____/\______ \   ______
@@ -461,9 +471,11 @@ void startTransfer();
 //	 |______/  |   __/\____ |(____  /__|  \___  > |_______ \/_______  //_______  /____  >
 //	           |__|        \/     \/          \/          \/        \/         \/     \/ 
 // =================================================================================================
+*/
 
 void show();
 
+/*
 // =================================================================================================
 //	___________ _____  _____              __          
 //	\_   _____// ____\/ ____\____   _____/  |_  ______
@@ -474,6 +486,7 @@ void show();
 // =================================================================================================
 // The effects in this section are adapted from the Adafruit NeoPixel library at:
 // https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
+*/
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.

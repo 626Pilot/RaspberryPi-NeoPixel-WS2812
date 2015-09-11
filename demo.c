@@ -88,6 +88,7 @@
 //				https://github.com/adafruit/Adafruit_NeoPixel/blob/master/Adafruit_NeoPixel.cpp
 
 
+/*
 // =================================================================================================
 //	.___              .__            .___             
 //	|   | ____   ____ |  |  __ __  __| _/____   ______
@@ -96,6 +97,7 @@
 //	|___|___|  /\___  >____/____/\____ |\___  >____  >
 //	         \/     \/                \/    \/     \/ 
 // =================================================================================================
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -114,9 +116,12 @@
 #include <math.h>
 #include <time.h>
 
+#include <signal.h>
 #include <getopt.h>
 #include "ws2812-RPi.h"
+#include <time.h>
 
+/*
 // =================================================================================================
 //	   _____         .__        
 //	  /     \ _____  |__| ____  
@@ -125,12 +130,14 @@
 //	\____|__  (____  /__|___|  /
 //	        \/     \/        \/ 
 // =================================================================================================
+*/
 
 float cfg_brightness=DEFAULT_BRIGHTNESS;
 
 void effectsDemo() {
 
-	int i, j, ptr;
+	int i, j;
+	// int ptr;
 	float k;
 
 
@@ -148,7 +155,7 @@ void effectsDemo() {
 
 	// Watermelon fade :)
 	for(k=0; k<0.5; k+=.01) {
-		ptr=0;
+		// ptr=0;
 		setBrightness(k);
 		for(i=0; i<numLEDs; i++) {
 			setPixelColor(i, i*5, 64, i*2);
@@ -156,7 +163,7 @@ void effectsDemo() {
 		show();
 	}
 	for(k=0.5; k>=0; k-=.01) {
-		ptr=0;
+		// ptr=0;
 		setBrightness(k);
 		for(i=0; i<numLEDs; i++) {
 			setPixelColor(i, i*5, 64, i*2);
@@ -168,24 +175,26 @@ void effectsDemo() {
 	// Random color fade
 	srand(time(NULL));
 	uint8_t lastRed = 0;
-	uint8_t lastGreen = 0;
+	// uint8_t lastGreen = 0;
 	uint8_t lastBlue = 0;
-	uint8_t red, green, blue;
-	Color_t curPixel;
+	uint8_t red;
+	// uint8_t green;
+	uint8_t blue;
+	//Color_t curPixel;
 	setBrightness(cfg_brightness);
 	for(j=1; j<16; j++) {
-		ptr = 0;
+		// ptr = 0;
 		if(j % 3) {
 			red = 120;
-			green = 64;
+			// green = 64;
 			blue = 48;
 		} else if(j % 7) {
 			red = 255;
-			green = 255;
+			// green = 255;
 			blue = 255;
 		} else {
 			red = rand();
-			green = rand();
+			// green = rand();
 			blue = rand();
 		}
 		for(k=0; k<1; k+=.01) {
@@ -196,20 +205,63 @@ void effectsDemo() {
 					i * (255 / numLEDs), //(green * k) + (lastGreen * (1-k)),
 					(blue * k) + (lastBlue * (1-k))
 					);
-				curPixel = getPixelColor(i);
+				// curPixel = getPixelColor(i);
 			}
 			show();
 		}
 		lastRed = red;
-		lastGreen = green;
+		// lastGreen = green;
 		lastBlue = blue;
 	}
 }
 
 
+void showClock() {
+	struct tm *result;
+	int sec_mills=0;
+	int last_sec=0;
+	while(true) {
+		time_t t=time(NULL);
+		result = localtime(&t);
+		if(result == NULL) {
+			printf("localtime error\n");
+			abort();
+		}
+		int invert = result->tm_min & 1;
+		sec_mills++;
+		if(result->tm_sec != last_sec) {
+			sec_mills=0;
+			last_sec=result->tm_sec;
+		}
+		float f_sec=result->tm_sec + sec_mills*0.1;
+		int i;
+		// printf("min: %d h:%d s:%d\n", result->tm_min, result->tm_sec, result->tm_hour);
+		// printf(" (%d, %d, %d);\n", (int) floor(result->tm_min/2.5), (int) floor(result->tm_sec/2.5), (result->tm_hour % 12)*2);
+		for(i=0; i < 24; i++) {
+			// printf("%d\n",i);
+			uint8_t sec;
+			if(i < floor(f_sec/2.5)) {
+				sec=0xff;
+			} else if(i <= floor(f_sec/2.5)) {
+				sec=0xff * fmod(f_sec/2.5, 1.0) ;
+				// printf("sec=%d sec_mills=%d\n",sec,sec_mills);
+			} else {
+				sec=0;
+			}
+			if(invert) {
+				sec=0xff-sec;
+			}
+			setPixelColor(i, floor(result->tm_min/2.5) == i ? 0xff : 0, sec, (result->tm_hour*2 % 24) == i ? 0xff : 0 );
+		}
+		show();
+		usleep(100000);
+	}
+}
+
 int main(int argc, char **argv)
 { 
 	int set=false;
+	int clock=false;
 
 	while (1) {
 		int option_index = 0;
@@ -218,6 +270,7 @@ int main(int argc, char **argv)
 			{"debug", 0, NULL, 'd'},
 			{"version", 0, NULL, 'v'},
 			{"brightness", 1, NULL, 'b'},
+			{"clock", 0, NULL, 'c'},
 			{"set", 0, NULL, 's'}
 		};
 		int c = getopt_long(argc, argv, "hduvs:p:x", long_options, &option_index);
@@ -242,6 +295,9 @@ int main(int argc, char **argv)
 				exit(0);
 			case 'b':
 				cfg_brightness=atof(optarg);
+				break;
+			case 'c':
+				clock=true;
 				break;
 			case 's':
 				set=true;
@@ -286,7 +342,7 @@ int main(int argc, char **argv)
 	if(set) {
 		for(i=optind; i < argc; i++) {
 			const char *elem=argv[i];
-			const char *endp=NULL;
+			char *endp=NULL;
 			long l=strtol(elem, &endp, 16);
 			if(endp && endp[0] == '\0') {
 				// printf("argv[%d]=%s\n", i, elem);
@@ -294,6 +350,8 @@ int main(int argc, char **argv)
 			}
 		}
 		show();
+	} else if(clock) {
+		showClock();
 	} else {
 		// Show some effects
 		while(true) {
