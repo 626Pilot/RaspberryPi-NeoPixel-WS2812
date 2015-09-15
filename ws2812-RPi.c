@@ -88,6 +88,7 @@
 //				https://github.com/adafruit/Adafruit_NeoPixel/blob/master/Adafruit_NeoPixel.cpp
 
 
+/*
 // =================================================================================================
 //	.___              .__            .___             
 //	|   | ____   ____ |  |  __ __  __| _/____   ______
@@ -96,6 +97,7 @@
 //	|___|___|  /\___  >____/____/\____ |\___  >____  >
 //	         \/     \/                \/    \/     \/ 
 // =================================================================================================
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -114,9 +116,11 @@
 #include <math.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/file.h>	// Used for single instance check
 
 
 
+/*
 // =================================================================================================
 //	________          _____.__                         ____    ____   ____                    
 //	\______ \   _____/ ____\__| ____   ____   ______  /  _ \   \   \ /   /____ _______  ______
@@ -125,6 +129,7 @@
 //	/_______  /\___  >__|  |__|___|  /\___  >____  > \_____\ \    \___/  (____  /__|  /____  >
 //	        \/     \/              \/     \/     \/         \/                \/           \/ 
 // =================================================================================================
+*/
 
 // Base addresses for GPIO, PWM, PWM clock, and DMA controllers (physical, not bus!)
 // These will be "memory mapped" into virtual RAM so that they can be written and read directly.
@@ -405,10 +410,10 @@ void printBinary(unsigned int i, unsigned int bits) {
 // Reverse the bits in a word
 unsigned int reverseWord(unsigned int word) {
 	unsigned int output = 0;
-	unsigned char bit;
+	// unsigned char bit;
 	int i;
 	for(i=0; i<32; i++) {
-		bit = word & (1 << i) ? 1 : 0;
+		// bit = word & (1 << i) ? 1 : 0;
 		output |= word & (1 << i) ? 1 : 0;
 		if(i<31) {
 			output <<= 1;
@@ -428,7 +433,7 @@ static void udelay(int us) {
 
 // Shutdown functions
 // --------------------------------------------------------------------------------------------------
-static void terminate(int dummy) {
+void terminate(int dummy) {
 	// Shut down the DMA controller
 	if(dma_reg) {
 		CLRBIT(dma_reg[DMA_CS], DMA_CS_ACTIVE);
@@ -464,13 +469,13 @@ static void fatal(char *fmt, ...) {
 // Memory management
 // --------------------------------------------------------------------------------------------------
 // Translate from virtual address to physical
-static unsigned int mem_virt_to_phys(void *virt) {
+unsigned int mem_virt_to_phys(void *virt) {
 	unsigned int offset = (uint8_t *)virt - virtbase;
 	return page_map[offset >> PAGE_SHIFT].physaddr + (offset % PAGE_SIZE);
 }
 
 // Translate from physical address to virtual
-static unsigned int mem_phys_to_virt(uint32_t phys) {
+unsigned int mem_phys_to_virt(uint32_t phys) {
 	unsigned int pg_offset = phys & (PAGE_SIZE - 1);
 	unsigned int pg_addr = phys - pg_offset;
 	int i;
@@ -501,6 +506,7 @@ static void * map_peripheral(uint32_t base, uint32_t len) {
 }
 
 
+/*
 // =================================================================================================
 //	.____     ___________________      _________ __          _____  _____ 
 //	|    |    \_   _____/\______ \    /   _____//  |_ __ ___/ ____\/ ____\
@@ -509,6 +515,7 @@ static void * map_peripheral(uint32_t base, uint32_t len) {
 //	|_______ \/_______  //_______  / /_______  /|__| |____/ |__|   |__|   
 //	        \/        \/         \/          \/                           
 // =================================================================================================
+*/
 
 // Brightness - I recommend 0.2 for direct viewing at 3.3v.
 #define DEFAULT_BRIGHTNESS 1.0
@@ -663,6 +670,7 @@ unsigned char getPWMBit(unsigned int bitPos) {
 
 
 
+/*
 // =================================================================================================
 //	________        ___.
 //	\______ \   ____\_ |__  __ __  ____  
@@ -671,6 +679,7 @@ unsigned char getPWMBit(unsigned int bitPos) {
 //	 /_______  /\___  >___  /____/\___  / 
 //	         \/     \/    \/     /_____/  
 // =================================================================================================
+*/
 
 // Dump contents of LED buffer
 void dumpLEDBuffer() {
@@ -842,6 +851,7 @@ void dumpDMA() {
 
 
 
+/*
 // =================================================================================================
 //	.___       .__  __      ___ ___                  .___                              
 //	|   | ____ |__|/  |_   /   |   \_____ _______  __| _/_  _  _______ _______   ____  
@@ -850,6 +860,7 @@ void dumpDMA() {
 //	|___|___|  /__||__|    \___|_  /(____  /__|  \____ |  \/\_/  (____  /__|    \___  >
 //	         \/                  \/      \/           \/              \/            \/ 
 // =================================================================================================
+*/
 
 void initHardware() {
 
@@ -937,7 +948,7 @@ void initHardware() {
 			fatal("Failed to read %s: %m\n", pagemap_fn);
 		}
 
-		if ((pfn >> 55)&0xfbf != 0x10c) {  // pagemap bits: https://www.kernel.org/doc/Documentation/vm/pagemap.txt
+		if (((pfn >> 55)&0xfbf) != 0x10c) {  // pagemap bits: https://www.kernel.org/doc/Documentation/vm/pagemap.txt
 			fatal("Page %d not present (pfn 0x%016llx)\n", i, pfn);
 		}
 
@@ -1109,6 +1120,7 @@ void startTransfer() {
 
 
 
+/*
 // =================================================================================================
 //	  ____ ___            .___       __           .____     ___________________          
 //	 |    |   \______   __| _/____ _/  |_  ____   |    |    \_   _____/\______ \   ______
@@ -1117,6 +1129,7 @@ void startTransfer() {
 //	 |______/  |   __/\____ |(____  /__|  \___  > |_______ \/_______  //_______  /____  >
 //	           |__|        \/     \/          \/          \/        \/         \/     \/ 
 // =================================================================================================
+*/
 
 void show() {
 
@@ -1125,12 +1138,11 @@ void show() {
 
 	// Read data from LEDBuffer[], translate it into wire format, and write to PWMWaveform
 	int i, j;
-	unsigned int LEDBuffeWordPos = 0;
-	unsigned int PWMWaveformBitPos = 0;
+	// unsigned int LEDBuffeWordPos = 0;
+	// unsigned int PWMWaveformBitPos = 0;
 	unsigned int colorBits = 0;			// Holds the GRB color before conversion to wire bit pattern
 	unsigned char colorBit = 0;			// Holds current bit out of colorBits to be processed
 	unsigned int wireBit = 0;			// Holds the current bit we will set in PWMWaveform
-	Color_t color;
 
 	for(i=0; i<numLEDs; i++) {
 		// Create bits necessary to represent one color triplet (in GRB, not RGB, order)
@@ -1197,12 +1209,12 @@ The FIFO only has enough words for about 7 LEDs, which is why we use DMA instead
 //		*(pwm + PWM_FIF1) = 0xACAC00F0;	// A test pattern easily visible on an oscilloscope, but not WS2812 compatible
 		usleep(20);
 	}
-/**/
+// */
 
 }
 
 
-
+/*
 // =================================================================================================
 //	___________ _____  _____              __          
 //	\_   _____// ____\/ ____\____   _____/  |_  ______
@@ -1213,6 +1225,7 @@ The FIFO only has enough words for about 7 LEDs, which is why we use DMA instead
 // =================================================================================================
 // The effects in this section are adapted from the Adafruit NeoPixel library at:
 // https://github.com/adafruit/Adafruit_NeoPixel/blob/master/examples/strandtest/strandtest.ino
+*/
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
@@ -1305,124 +1318,3 @@ void theaterChaseRainbow(uint8_t wait) {
 
 
 
-// =================================================================================================
-//	   _____         .__        
-//	  /     \ _____  |__| ____  
-//	 /  \ /  \\__  \ |  |/    \ 
-//	/    Y    \/ __ \|  |   |  \
-//	\____|__  (____  /__|___|  /
-//	        \/     \/        \/ 
-// =================================================================================================
-
-void effectsDemo() {
-
-	int i, j, ptr;
-	float k;
-
-	// Default effects from the Arduino lib
-	colorWipe(Color(255, 0, 0), 50); // Red
-	colorWipe(Color(0, 255, 0), 50); // Green
-	colorWipe(Color(0, 0, 255), 50); // Blue
-	theaterChase(Color(127, 127, 127), 50); // White
-	theaterChase(Color(127,   0,   0), 50); // Red
-	theaterChase(Color(  0,   0, 127), 50); // Blue
-	rainbow(5);
-	rainbowCycle(5);
-	theaterChaseRainbow(50);
-
-	// Watermelon fade :)
-	for(k=0; k<0.5; k+=.01) {
-		ptr=0;
-		setBrightness(k);
-		for(i=0; i<numLEDs; i++) {
-			setPixelColor(i, i*5, 64, i*2);
-		}
-		show();
-	}
-	for(k=0.5; k>=0; k-=.01) {
-		ptr=0;
-		setBrightness(k);
-		for(i=0; i<numLEDs; i++) {
-			setPixelColor(i, i*5, 64, i*2);
-		}
-		show();
-	}
-	usleep(1000);
-
-	// Random color fade
-	srand(time(NULL));
-	uint8_t lastRed = 0;
-	uint8_t lastGreen = 0;
-	uint8_t lastBlue = 0;
-	uint8_t red, green, blue;
-	Color_t curPixel;
-	setBrightness(DEFAULT_BRIGHTNESS);
-	for(j=1; j<16; j++) {
-		ptr = 0;
-		if(j % 3) {
-			red = 120;
-			green = 64;
-			blue = 48;
-		} else if(j % 7) {
-			red = 255;
-			green = 255;
-			blue = 255;
-		} else {
-			red = rand();
-			green = rand();
-			blue = rand();
-		}
-		for(k=0; k<1; k+=.01) {
-			for(i=0; i<numLEDs; i++) {
-				setPixelColor(
-					i,
-					(red * k) + (lastRed * (1-k)),
-					i * (255 / numLEDs), //(green * k) + (lastGreen * (1-k)),
-					(blue * k) + (lastBlue * (1-k))
-					);
-				curPixel = getPixelColor(i);
-			}
-			show();
-		}
-		lastRed = red;
-		lastGreen = green;
-		lastBlue = blue;
-	}
-}
-
-
-int main(int argc, char **argv) { 
-
-	// Catch all signals possible - it's vital we kill the DMA engine on process exit!
-	int i;
-	for (i = 0; i < 64; i++) {
-		struct sigaction sa;
-		memset(&sa, 0, sizeof(sa));
-		sa.sa_handler = terminate;
-		sigaction(i, &sa, NULL);
-	}
-
-	// Don't buffer console output
-	setvbuf(stdout, NULL, _IONBF, 0);
-
-	// How many LEDs?
-	numLEDs = 24;
-
-	// How bright? (Recommend 0.2 for direct viewing @ 3.3V)
-	setBrightness(DEFAULT_BRIGHTNESS);
-
-	// Init PWM generator and clear LED buffer
-	initHardware();
-	clearLEDBuffer();
-
-	// Show some effects
-	while(true) {
-		effectsDemo();
-	}
-
-	// Exit cleanly, freeing memory and stopping the DMA & PWM engines
-	// We trap all signals (including Ctrl+C), so even if you don't get here, it terminates correctly
-	terminate(0);
-
-	return 0;
-}
