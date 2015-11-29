@@ -136,7 +136,7 @@ float cfg_brightness=DEFAULT_BRIGHTNESS;
 
 void effectsDemo() {
 
-	int i, j;
+	unsigned int i, j;
 	// int ptr;
 	float k;
 

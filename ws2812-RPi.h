@@ -318,12 +318,12 @@ unsigned int reverseWord(unsigned int word);
 
 void terminate(int dummy);
 
-void fatal(char *fmt, ...);
+void fatal(const char *fmt, ...) __attribute__ ((format(printf,1,2)));
 
 // Memory management
 // --------------------------------------------------------------------------------------------------
 unsigned int mem_virt_to_phys(void *virt);
-unsigned int mem_phys_to_virt(uint32_t phys);
+size_t mem_phys_to_virt(size_t phys);
 void * map_peripheral(uint32_t base, uint32_t len);
 
 
@@ -349,15 +349,15 @@ typedef struct {
 	unsigned char b;
 } Color_t;
 
-unsigned int numLEDs;		// How many LEDs there are on the chain
+extern unsigned int numLEDs;		// How many LEDs there are on the chain
 
 #define LED_BUFFER_LENGTH 24
-Color_t LEDBuffer[LED_BUFFER_LENGTH];
+extern Color_t LEDBuffer[LED_BUFFER_LENGTH];
 
 // PWM waveform buffer (in words), 16 32-bit words are enough to hold 170 wire bits.
 // That's OK if we only transmit from the FIFO, but for DMA, we will use a much larger size.
 // 1024 (4096 bytes) should be enough for over 400 elements. It can be bumped up if you need more!
-unsigned int PWMWaveform[NUM_DATA_WORDS];
+extern unsigned int PWMWaveform[NUM_DATA_WORDS];
 
 // Set brightness
 unsigned char setBrightness(float b);
@@ -506,4 +506,3 @@ void theaterChase(Color_t c, uint8_t wait);
 
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait);
-

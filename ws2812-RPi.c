@@ -457,7 +457,7 @@ void terminate(int dummy) {
 	exit(1);
 }
 
-static void fatal(char *fmt, ...) {
+void fatal(const char *fmt, ...) {
 	va_list ap;
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
@@ -475,14 +475,14 @@ unsigned int mem_virt_to_phys(void *virt) {
 }
 
 // Translate from physical address to virtual
-unsigned int mem_phys_to_virt(uint32_t phys) {
+size_t mem_phys_to_virt(size_t phys) {
 	unsigned int pg_offset = phys & (PAGE_SIZE - 1);
 	unsigned int pg_addr = phys - pg_offset;
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < NUM_PAGES; i++) {
 		if (page_map[i].physaddr == pg_addr) {
-			return (uint32_t)virtbase + i * PAGE_SIZE + pg_offset;
+			return (size_t)virtbase + i * PAGE_SIZE + pg_offset;
 		}
 	}
 	fatal("Failed to reverse map phys addr %08x\n", phys);
@@ -864,7 +864,7 @@ void dumpDMA() {
 
 void initHardware() {
 
-	int i = 0;
+	unsigned int i = 0;
 	int pid;
 	int fd;
 	char pagemap_fn[64];
@@ -875,11 +875,11 @@ void initHardware() {
 
 	// Set up peripheral access
 	// ---------------------------------------------------------------
-	dma_reg = map_peripheral(DMA_BASE, DMA_LEN);
+	dma_reg = (unsigned int*)map_peripheral(DMA_BASE, DMA_LEN);
 	dma_reg += 0x000;
-	pwm_reg = map_peripheral(PWM_BASE, PWM_LEN);
-	clk_reg = map_peripheral(CLK_BASE, CLK_LEN);
-	gpio_reg = map_peripheral(GPIO_BASE, GPIO_LEN);
+	pwm_reg = (unsigned int*)map_peripheral(PWM_BASE, PWM_LEN);
+	clk_reg = (unsigned int*)map_peripheral(CLK_BASE, CLK_LEN);
+	gpio_reg = (unsigned int*)map_peripheral(GPIO_BASE, GPIO_LEN);
 
 
 	// Set PWM alternate function for GPIO18
@@ -893,7 +893,7 @@ void initHardware() {
 
 	// Allocate memory for the DMA control block & data to be sent
 	// ---------------------------------------------------------------
-	virtbase = mmap(
+	virtbase = (uint8_t*)mmap(
 		NULL,													// Address
 		NUM_PAGES * PAGE_SIZE,									// Length
 		PROT_READ | PROT_WRITE,									// Protection
@@ -915,7 +915,7 @@ void initHardware() {
 	//printf("virtbase mapped 0x%x bytes at 0x%x\n", NUM_PAGES * PAGE_SIZE, virtbase);
 
 	// Allocate page map (pointers to the control block(s) and data for each CB
-	page_map = malloc(NUM_PAGES * sizeof(*page_map));
+	page_map = (page_map_t*)malloc(NUM_PAGES * sizeof(*page_map));
 	if (page_map == 0) {
 		fatal("Failed to malloc page_map: %m\n");
 	} else {
@@ -931,7 +931,7 @@ void initHardware() {
 		fatal("Failed to open %s: %m\n", pagemap_fn);
 	}
 
-	if (lseek(fd, (unsigned long)virtbase >> 9, SEEK_SET) != (unsigned long)virtbase >> 9) {
+	if (lseek(fd, (unsigned long)virtbase >> 9, SEEK_SET) != (off_t)((unsigned long)virtbase >> 9)) {
 		fatal("Failed to seek on %s: %m\n", pagemap_fn);
 	}
 
@@ -1137,7 +1137,8 @@ void show() {
 	// Disabled, because we will overwrite the buffer anyway.
 
 	// Read data from LEDBuffer[], translate it into wire format, and write to PWMWaveform
-	int i, j;
+	unsigned int i;
+	int j;
 	// unsigned int LEDBuffeWordPos = 0;
 	// unsigned int PWMWaveformBitPos = 0;
 	unsigned int colorBits = 0;			// Holds the GRB color before conversion to wire bit pattern
@@ -1287,7 +1288,7 @@ void theaterChase(Color_t c, uint8_t wait) {
 				setPixelColorT(i+q, c);			// Turn every third pixel on
 			}
 			show();
-     
+	 
 			usleep(wait * 1000);
 
 			for (i=0; i < numPixels(); i=i+3) {
@@ -1299,7 +1300,7 @@ void theaterChase(Color_t c, uint8_t wait) {
 
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait) {
-	int j, q, i;
+	unsigned int j, q, i;
 	for (j=0; j < 256; j+=4) {     // cycle through every 4th color on the wheel
 		for (q=0; q < 3; q++) {
 			for (i=0; i < numPixels(); i=i+3) {
@@ -1308,7 +1309,7 @@ void theaterChaseRainbow(uint8_t wait) {
 			show();
 
 			usleep(wait * 1000);
-       
+	   
 			for (i=0; i < numPixels(); i=i+3) {
 				setPixelColor(i+q, 0, 0, 0);        //turn every third pixel off
 			}
