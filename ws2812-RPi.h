@@ -323,7 +323,7 @@ void fatal(char *fmt, ...);
 // Memory management
 // --------------------------------------------------------------------------------------------------
 unsigned int mem_virt_to_phys(void *virt);
-unsigned int mem_phys_to_virt(uint32_t phys);
+size_t mem_phys_to_virt(size_t phys);
 void * map_peripheral(uint32_t base, uint32_t len);
 
 
